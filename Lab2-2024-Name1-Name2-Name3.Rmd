@@ -1,10 +1,16 @@
 ---
 title: 'P&S-2022: Lab assignment 2'
-author: "Name1, Name2, Name3"
+author: "Maxim Holovin, Marko Peleshko-Zenon, Arseniy Stratiuk"
 output:
   html_document:
     df_print: paged
 ---
+## Work breakdown:
+Maxim Holovin: Task 3, 4\
+Marko Peleshko-Zenon: Task 1\
+Arseniy Stratiuk: Task 2\
+
+
 
 ## General comments and instructions
 
@@ -65,9 +71,9 @@ $$
 ```{r}
 # your team id number 
                           ###
-id <- 50                  ### Change to the correct id!
+id <- 11                  ### Change to the correct id!
                           ###
-set.seed(id)
+set.seed(11)
 p <- id/100
 # matrices G and H
 G <- matrix(c(1, 1, 1, 0, 0, 0, 0,
@@ -186,38 +192,203 @@ curve(pnorm(x, mean = mu, sd = sigma), col = "red", lwd = 2, add = TRUE)
     -   repeat this $K$ times to get the sample $\mathbf{s}=(s_1,\dots,s_K)$ of total times until the $100^{\mathrm{th}}$ click;\
     -   estimate the probability that the location is identified as safe and compare to the desired level $0.95$
 
-#### First, generate samples an sample means:
-
+## Part 1
 ```{r}
-nu1 <- 1  # change this!
-K <- 1e3
+nu_1 <- id+10
+K <- 1000
 n <- 5
-sample_means <- colMeans(matrix(rexp(n*K, rate = nu1), nrow=n))
+
+plot_ecdf_vs_cdf <- function(n) {
+    sample_means <- colMeans(matrix(rexp(n*K, rate = nu_1), nrow=n))
+    mu <- 1 / nu_1
+    sigma <- (1 / nu_1) / sqrt(n)
+    Fs <- ecdf(sample_means)
+
+    xlims <- c(mu-3*sigma,mu+3*sigma)
+    Fs <- ecdf(sample_means)
+    plot(Fs, 
+        xlim = xlims, 
+        col = "blue",
+        lwd = 2,
+        main = "Comparison of ecdf and cdf")
+    curve(pnorm(x, mean = mu, sd = sigma), col = "red", lwd = 2, add = TRUE)
+
+
+    max_diff <- max(abs(Fs(sample_means) - pnorm(sample_means, mean = mu, sd = sigma)))
+    cat("Maximal difference for n =", n, "is", max_diff, "\n")
+}
+
+plot_ecdf_vs_cdf(5)
+plot_ecdf_vs_cdf(10)
+plot_ecdf_vs_cdf(50)
 ```
 
-#### Next, calculate the parameters of the standard normal approximation
 
+This code demonstrates the Central Limit Theorem (CLT) by plotting the empirical CDF of sample means
+(blue line) against the theoretical Normal CDF (red line). As the sample size n increases,
+the blue line visibly converges to the red line, and the max_diff (the gap between them) decreases.
+This confirms that the distribution of sample means approaches a Normal distribution as n grows.\
+
+## Part 2
+
+a)$X_k \sim Exp(\nu)$, where $\nu = N\nu_1$
+$S = X_1 + \dots + X_{100}$
+It is safe when number of clicks per minut is less or equal to 100, so we need to find $P(S_{100} > 1) \ge 0.95$, or $P(S_{100} \le 1) \le 0.05$
+
+b)$E[S] = E\left[\sum_{k=1}^{100} X_k\right] = 100 \times E[X_k] = 100 \times (1/\nu) = 100/\nu$
+
+$\nu = N\nu_1 = 21N$
+
+### Theoretical bounds on $N$ using the Markov inequality:
+
+$P(S \ge a) \le \frac{E[S]}{a}$
+
+We want $P(S \ge 1) \ge 0.95$.
+
+$$
+P(S \ge 1) \le \frac{100}{\nu}
+$$
+
+$$
+0.95 \le \frac{100}{\nu}
+$$
+
+$$
+\nu \le \frac{100}{0.95} \approx 105.26
+$$
+
+$$
+21N \le 105.26 \implies N \le 5.01
+$$
+
+---
+
+### Theoretical bounds on $N$ using the Chernoff bound:
+
+$$
+P(S_{100} \le 1) \le e^{100 - \nu} \left(\frac{\nu}{100}\right)^{100}
+$$
+
+We need this $\le 0.05$.
+
+**For $N = 3$ ($\nu = 21 \times 3 = 63$):**
+
+$$
+\text{Bound} = e^{100 - 63} \left(\frac{63}{100}\right)^{100} = e^{37} (0.63)^{100}
+$$
+
+$$
+\ln(\text{Bound}) = 37 + 100 \ln(0.63) \approx 37 - 46.2 = -9.2
+$$
+
+$$
+\text{Bound} \approx e^{-9.2} \approx 0.0001 \le 0.05
+$$
+
+So $N = 3$ is allowed.
+
+**For $N = 4$ ($\nu = 21 \times 4 = 84$):**
+
+$$
+\text{Bound} = e^{100 - 84} \left(\frac{84}{100}\right)^{100} = e^{16} (0.84)^{100}
+$$
+
+$$
+\ln(\text{Bound}) = 16 + 100 \ln(0.84) \approx 16 - 17.4 = -1.4
+$$
+
+$$
+\text{Bound} \approx e^{-1.4} \approx 0.246 > 0.05
+$$
+
+Hence, $N \le 4$.
+
+---
+
+### Theoretical bounds on $N$ using the Central Limit Theorem (CLT):
+
+$$
+S_{100} \approx N(\mu = 100/\nu, \sigma^2 = 100/\nu^2)
+$$
+
+We want:
+$$
+P\left(Z \le \frac{1 - \mu}{\sigma}\right) \le 0.05
+$$
+
+$$
+P\left(Z \le \frac{1 - 100/\nu}{10/\nu}\right) \le 0.05
+$$
+
+The 5th percentile of the standard normal distribution is $z_{0.05} \approx -1.645$.
+
+$$
+\frac{1 - 100/\nu}{10/\nu} = \frac{\nu - 100}{10} \le -1.645
+$$
+
+$$
+\nu - 100 \le -16.45 \implies \nu \le 83.55
+$$
+
+$$
+21N \le 83.55 \implies N \le 3.978
+$$
+
+Results comparison:
+Markov: $N \le 5.01$
+Chernoff bound: $N \le 4$
+Central Limit Theorem: $N \le 3.978$
+
+c)
 ```{r}
-mu <- 0       # change this!
-sigma <- 1    # change this!
+
+N_predicted <- 3
+nu <- N_predicted * nu_1
+n <- 100
+K <- 10000
+t_limit <- 1
+
+s_sample <- rgamma(K, shape = n, rate = nu)
+sample_mean <- mean(s_sample)
+sample_sd <- sd(s_sample)
+theo_mean <- n / nu
+theo_sd <- sqrt(n) / nu
+prob_estimate <- mean(s_sample > t_limit)
+
+cat("nu_1:", nu_1)
+cat("Predicted Max N:", N_predicted)
+cat("Parameter nu (rate):", nu)
+cat("Number of simulations (K):", K)
+cat("Sample Mean of S_100:", round(sample_mean, 4))
+cat("Theoretical Mean of S_100:", round(theo_mean, 4))
+cat("Sample SD of S_100:", round(sample_sd, 4))
+cat("Theoretical SD of S_100:", round(theo_sd, 4))
+cat("Estimated P(S_100 > 1):", prob_estimate)
+cat("Desired Probability Level:", 0.95)
+
+
+hist(s_sample, breaks = 50, freq = FALSE,
+     main = paste("Histogram of S_100 (N=", N_predicted, ", nu=", nu, ")"),
+     xlab = "Time of 100th click (minutes)",
+     ylab = "Density",
+     col = "lightblue")
+
+curve(dgamma(x, shape = n, rate = nu), add = TRUE, col = "red", lwd = 2)
+
+abline(v = t_limit, col = "green", lty = 2, lwd = 3)
+
+abline(v = sample_mean, col = "blue", lty = 2, lwd = 2)
+abline(v = theo_mean, col = "red", lty = 2, lwd = 2)
 ```
+In this task, we first demonstrated the Central Limit Theorem (CLT), showing that as the sample size $n$ increased,
+the empirical distribution of sample means (blue line) from an Exponential source rapidly converged to the
+theoretical Normal distribution (red line), with the max_diff between them decreasing.\
 
-#### We can now plot ecdf and cdf
-
-```{r}
-xlims <- c(mu-3*sigma,mu+3*sigma)
-Fs <- ecdf(sample_means)
-plot(Fs, 
-     xlim = xlims, 
-     col = "blue",
-     lwd = 2,
-     main = "Comparison of ecdf and cdf")
-curve(pnorm(x, mean = mu, sd = sigma), col = "red", lwd = 2, add = TRUE)
-```
-
-**Next, proceed with all the remaining steps**
-
-**Do not forget to include several sentences summarizing your work and the conclusions you have made!**
+We then applied this principle to determine the maximum safe number of radioactive samples ($N$).
+By comparing theoretical bounds, we found the CLT and Chernoff bound (both predicting $N \le 3$)
+were much tighter and more restrictive than the Markov bound ($N \le 5$). Our final simulation,
+using the predicted $N=3$, confirmed this choice was safe, yielding an estimated safety probability of 1.0,
+which is well above the required 0.95 threshold.\
 
 ------------------------------------------------------------------------
 
@@ -227,24 +398,62 @@ curve(pnorm(x, mean = mu, sd = sigma), col = "red", lwd = 2, add = TRUE)
 
 1.  **In this part, we discuss independence of random variables and its moments: expectation and variance.**
 
-    1.  Suppose we have a random variable $X$. Explain why $\mathbb{E}(\frac{1}{X}) \neq \frac{1}{\mathbb{E(X)}}$;
+    1.  Suppose we have a random variable $X$. Explain why $\mathbb{E}(\frac{1}{X}) \neq \frac{1}{\mathbb{E(X)}}$;\
+    Expected value operator $E[\cdot]$ only "passes through" linear functions, and $f(x) = 1/x$ is a non-linear function.
 
     2.  Let $X \sim \mathscr{N}(\mu,\sigma^2)$ with $\mu = teamidnumber$ and $\sigma^{2} = 2\times teamidnumber+7$. Simulate realizations $x_1,x_2,\dots,x_{100}$ of $X$ and $y_1,y_2,\dots,y_{100}$ of $Y := \frac{1}{X}$ to calculate the values of $\frac{1}{\overline{\textbf{X}}}$ and $\overline{\textbf{Y}}$. Comment on the received results;
 
         ```{r}
-        mu <- 0 #change this!
-        sigma <- 1 #change this
+        mu <- id
+        sigma <- id*2 + 7
         N <- 100
 
-        # YOUR CODE HERE
+        X <- rnorm(N, mean = mu, sd = sqrt(sigma))
+
+        Y <- 1 / X
+
+        cat("1/mean(X) =", 1/mean(X), "\n")
+        cat("mean(1/X)  =", mean(Y), "\n")
+        summary(X)
+        summary(Y)
+
         ```
+    We generated 100 realizations of a normal random variable \( X \sim \mathcal{N}(\mu, \sigma^2) \),\
+    where \( \mu = \text{teamidnumber} \) and \( \sigma^2 = 2 \times \text{teamidnumber} + 7 \).\
+
+    Then we calculated:\
+    - \( \frac{1}{\bar{X}} \), which is the reciprocal of the sample mean of \( X \);\
+    - \( \overline{Y} = \frac{1}{100}\sum_{i=1}^{100} \frac{1}{X_i} \).\
+
+    The two values are **not equal** in general, because the function \( f(x) = \frac{1}{x} \) is *nonlinear*.\
+    ------------------------------------------------------------------------
 
     3.  Let $X$ and $Y$ be exponentially distributed r.v.'s with parameter $\lambda = 2$. Set $Z := \log{X} + 5$. Plot the Quantile-Quantile plot and scatterplot of $X$ and $Y$. Plot the Quantile-Quantile plot and scatterplot of $X$ and $Z$. Explain the results. Comment on the difference of relations between the pairs of random variables. Which pair of r.v.'s is dependent and which one is similar?
 
         ```{r}
-        # YOUR CODE HERE
+        lambda <- 2
+        N <- 1000
+        X_exp <- rexp(N, rate = lambda)
+        Y_exp <- rexp(N, rate = lambda)
+        Z <- log(X_exp) + 5
+
+        qqplot(X_exp, Y_exp, main = "QQ: X vs Y (обидва ~ Exp(2))")
+        abline(0,1, col="red")
+        plot(X_exp, Y_exp, main="Scatter: X vs Y (незалежні)", xlab="X", ylab="Y")
+
+        qqplot(X_exp, Z, main = "QQ: X vs Z (Z = log(X)+5)")
+        abline(0,1, col="red")
+        plot(X_exp, Z, main="Scatter: X vs Z (залежні)", xlab="X", ylab="Z = log(X)+5")
         ```
 
+
+        \
+        The random variables \( X \) and \( Y \) are **independent** and both follow the exponential distribution 
+        with parameter \( \lambda = 2 \).\
+        The random variables \( X \) and \( Z = \log(X) + 5 \) are **dependent**, because \( Z \) is a deterministic
+        function of \( X \).\
+        \( (X, Y) \): independent but similar\
+        \( (X, Z) \): dependent\
     ------------------------------------------------------------------------
 
 2.  You toss a fair coin three times and a random variable $X$ records how many times the coin shows Heads. You convince your friend that they should play a game with the following payoff: every round (equivalent to three coin tosses) will cost £$1$. They will receive £$0.5$ for every coin showing Heads. What is the expected value and the variance of the random variable $Y := 0.5X-1$?
@@ -252,28 +461,68 @@ curve(pnorm(x, mean = mu, sd = sigma), col = "red", lwd = 2, add = TRUE)
     To answer this,
 
     1.  Explain what type of random variable is X:
-
-        -   Normally distributed
-
-        -   Binomially distributed
-
-        -   Poisson distributed
-
-        -   Uniformly distributed
+        Each coin toss is a Bernoulli trial and we have 3 independent trials, so\
+        X∼Binomial(n=3,p=0.5)\
 
     2.  What are the expected value and variance of X? Simulate realizations $x_1,x_2,\dots,x_{100}$ of $X$ to calculate the values of sample mean $\overline{\mathbf{X}}$ and sample variance $s^2 = \frac{\sum_{i=1}^{n}{(x_i - \overline{x})^{2}}}{n-1}$. Comment on the results;
 
         ```{r}
-        # YOUR CODE HERE
+        N <- 100
+        n <- 3
+        p <- 0.5
+        X <- rbinom(N, size = n, prob = p)
+        mean_X <- mean(X)
+        var_X <- var(X)
+
+        cat("Theoretical E[X] =", 1.5, "\n")
+        cat("Sample mean (mean_X) =", mean_X, "\n\n")
+
+        cat("Theoretical Var(X) =", 0.75, "\n")
+        cat("Sample variance (var_X) =", var_X, "\n")
+
         ```
+        Theoretical E[X] = n*p = 3 * 0.5 = 1.5.\
+        Theoretical Var(X) = n*p*(1-p) = 3 * 0.5 * 0.5 = 0.75.\
+
+        The code output shows that the sample statistics (mean_X and var_X)
+        are very close to the theoretical values.
+        This is expected and illustrates the Law of Large Numbers: \
+        with a sufficiently large sample, the sample mean
+        approaches the true expected value.
+
 
     3.  What are the expected value and variance of Y? Simulate realizations $y_1,y_2,\dots,y_{100}$ of $Y$ to calculate the values of sample mean $\overline{\mathbf{Y}}$ and sample variance $s^2 = \frac{\sum_{i=1}^{n}{(y_i - \overline{y})^{2}}}{n-1}$. Comment on the results;
 
         ```{r}
-        # YOUR CODE HERE
-        ```
+        Y <- 0.5 * X - 1
+        mean_Y <- mean(Y)
+        var_Y <- var(Y)
 
-**Do not forget to include several sentences summarizing your work and the conclusions you have made!**
+        cat("Theoretical E[Y] =", -0.25, "\n")
+        cat("Sample mean (mean_Y) =", mean_Y, "\n\n")
+
+        cat("Theoretical Var(Y) =", 0.1875, "\n")
+        cat("Sample variance (var_Y) =", var_Y, "\n")
+
+        ```
+        Here we verify the properties of E[X] and Var(X) for the linear transformation Y = aX + b.
+
+        Expected Value: E[Y] = E[aX + b] = a*E[X] + b
+        E[Y] = 0.5 * E[X] - 1 = 0.5 * 1.5 - 1 = 0.75 - 1 = -0.25.
+
+        Variance: Var(Y) = Var(aX + b) = a^2 * Var(X)
+        Theoretical Var(Y) = (0.5)^2 * Var(X) = 0.25 * 0.75 = 0.1875.
+        Just like in part 2, we see that the sample statistics (mean_Y and var_Y), 
+        calculated from the data, are very close to the theoretical values (-0.25 and 0.1875),
+        which confirms the properties of E[X] and Var(X).\
+
+    ------------------------------------------------------------------------
+
+In this task, we explored expectation, variance, and independence of random variables.\
+We showed that $\mathbb{E}(1/X) \neq 1/\mathbb{E}(X)$, confirming this property for a non-linear function.\
+We also observed that $X$ and $Z = \log(X)+5$ are dependent, while $X$ and $Y$ are independent.\
+For the binomial variable $X$ and its linear transformation $Y = 0.5X-1$, the simulated means and variances closely matched the theoretical values.\
+This confirmed the linearity of expectation and the scaling property of variance.
 
 ------------------------------------------------------------------------
 
