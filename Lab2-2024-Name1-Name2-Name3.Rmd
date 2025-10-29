@@ -1,13 +1,13 @@
 ---
 title: 'P&S-2022: Lab assignment 2'
-author: "Maxim Holovin, Marko Peleshko-Zenon, Arseniy Stratiuk"
+author: "Maxim Holovin, Marko-Zenon Peleshko, Arseniy Stratiuk"
 output:
   html_document:
     df_print: paged
 ---
 ## Work breakdown:
 Maxim Holovin: Task 3, 4\
-Marko Peleshko-Zenon: Task 1\
+Marko-Zenon Peleshko: Task 1\
 Arseniy Stratiuk: Task 2\
 
 
@@ -69,13 +69,9 @@ $$
 #### First, we set the **id** of the team and define the probability $p$ and the generator and parity-check matrices $G$ and $H$
 
 ```{r}
-# your team id number 
-                          ###
-id <- 11                  ### Change to the correct id!
-                          ###
-set.seed(11)
+id <- 11
+set.seed(id)
 p <- id/100
-# matrices G and H
 G <- matrix(c(1, 1, 1, 0, 0, 0, 0,
 		1, 0, 0, 1, 1, 0, 0,
 		0, 1, 0, 1, 0, 1, 0,
@@ -83,31 +79,59 @@ G <- matrix(c(1, 1, 1, 0, 0, 0, 0,
 H <- t(matrix(c(1, 0, 1, 0, 1, 0, 1,
 		0, 1, 1, 0, 0, 1, 1,
 		0, 0, 0, 1, 1, 1, 1), nrow = 3, byrow = TRUE))
-# cat("The matrix G is: \n") 
-#G  
-#cat("The matrix H is: \n") 
-#H
-#cat("The product GH must be zero: \n")
-#(G%*%H) %%2
 ```
 
 #### Next, generate the messages
 
 ```{r}
-# generate N messages
+N <- 1000
 
 message_generator <- function(N) {
   matrix(sample(c(0,1), 4*N, replace = TRUE), nrow = N)
 }  
-messages <- message_generator(100)
+messages <- message_generator(N)
 codewords <- (messages %*% G) %% 2
 ```
 
 #### Generate random errors; do not forget that they occur with probability $p$! Next, generate the received messages
 
 ```{r}
-#  errors <- ...
-#  received <-   
+errors <- matrix(rbinom(7 * N, 1, p), nrow = N)
+
+received <- (codewords + errors) %% 2
+mod2 <- function(x) x %% 2
+syndrome <- function(r) mod2(r %*% H)
+decode <- function(r) {
+  z <- as.numeric(syndrome(r))
+  idx <- z[1] + 2*z[2] + 4*z[3]
+  if (idx > 0) r[idx] <- 1 - r[idx]
+  decoded <- r[c(3,5,6,7)]
+  return(decoded)
+}
+
+decoded_messages <- t(apply(received, 1, decode))
+success <- rowSums(decoded_messages == messages) == 4
+p_hat <- mean(success)
+p_hat
+se <- sqrt(p_hat * (1 - p_hat) / N)
+z_95 <- 1.96
+epsilon <- z_95 * se
+ci <- c(p_hat - epsilon, p_hat + epsilon)
+
+cat("Estimated p* =", round(p_hat, 4), "\n")
+cat("Half-length ε =", round(epsilon, 4), "\n")
+cat("95% confidence interval: (", round(ci[1], 4), ",", round(ci[2], 4), ")\n")
+
+N_needed <- ceiling((z_95^2 * p_hat * (1 - p_hat)) / (0.03^2))
+cat("To get ε ≤ 0.03, need N ≥", N_needed, "\n")
+num_errors <- rowSums(errors)
+
+hist(num_errors, breaks = seq(-0.5, 7.5, 1),
+     main = "Histogram of number of bit errors (per codeword)",
+     xlab = "Number of errors k", col = "skyblue", border = "white")
+
+k <- 0:7
+lines(k, dbinom(k, 7, p) * N, type="b", col="red", lwd=2)
 ```
 
 The next steps include detecting the errors in the received messages, correcting them, and then decoding the obtained messages. After this, you can continue with calculating all the quantities of interest
