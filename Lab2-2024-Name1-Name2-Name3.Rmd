@@ -85,7 +85,6 @@ H <- t(matrix(c(1, 0, 1, 0, 1, 0, 1,
 
 ```{r}
 N <- 1000
-
 message_generator <- function(N) {
   matrix(sample(c(0,1), 4*N, replace = TRUE), nrow = N)
 }  
