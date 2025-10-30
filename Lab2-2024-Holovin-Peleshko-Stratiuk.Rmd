@@ -146,6 +146,10 @@ The next steps include detecting the errors in the received messages, correcting
 
 **Do not forget to include several sentences summarizing your work and the conclusions you have made!**
 
+In this task, we simulated the encoding–transmission–decoding process of the $[7,4]$ Hamming code. The estimated probability $\hat{p}$ of correct message transmission was found to be very close to the true success probability $p^$, as expected for large $N$ due to the Law of Large Numbers. 
+
+Using the Central Limit Theorem, we constructed a 95% confidence interval $(p^ - \varepsilon, p^* + \varepsilon)$ for the estimate $\hat{p}$ and determined that increasing $N$ reduces the margin of error $\varepsilon$. The required sample size $N$ ensuring $\varepsilon \le 0.03$ was also computed. Finally, the histogram of the number of bit errors followed a Binomial(7, p) distribution, confirming that bit errors occur independently with the same probability.
+
 ------------------------------------------------------------------------
 
 ### Task 2.
@@ -755,4 +759,14 @@ This confirmed the linearity of expectation and the scaling property of variance
 
 ### General summary and conclusions
 
-Summarize here what you've done, whether you solved the tasks, what difficulties you had etc.
+This lab assignment successfully applied the Law of Large Numbers (LLN), the Central Limit Theorem (CLT), and theoretical bounds (Markov's and Chernoff's) to analyze three distinct probabilistic systems.
+
+Key Findings and Conclusions:Coding Theory (Task 1): We simulated the $[7,4]$ Hamming code, estimating the correct message transmission probability $\hat{p} \approx 0.965$ (for team ID 11). The simulation confirmed the LLN, with the estimate falling within the $\mathbf{95\%}$ confidence interval ($\approx [0.960, 0.970]$) derived from the CLT.
+
+Radioactive Decay (Task 2): We modeled ${}^{137}\text{Cs}$ decay using the Poisson distribution ($\mu \approx 3.52 \times 10^7$). The CLT was visually confirmed as the sample means converged to a Normal distribution. Theoretical bounds (CLT and Chernoff's) determined the maximum safe number of samples was $\mathbf{N=22}$ to keep the total decay count below $8 \times 10^8$ with 95% probability.
+
+Geiger Counter Safety (Task 3): Analyzing inter-click times (Exponential distribution), we once again used the CLT to verify the distribution of sample means. The most restrictive and reliable theoretical bounds (CLT and Chernoff's) identified $\mathbf{N=3}$ as the maximum number of radioactive sources that ensures the location is identified as safe (fewer than 100 clicks per minute) with $\ge 95\%$ probability.
+
+Statistical Properties (Task 4): We confirmed fundamental statistical properties: the non-linearity of expectation for non-linear functions ($\mathbb{E}[1/X] \neq 1/\mathbb{E}[X]$) and the relationship between independence and dependence, contrasting i.i.d. Exponential variables with deterministically dependent variables ($X$ vs. $Z=\log(X)+5$). Finally, we verified the linearity of the expectation and variance scaling for a linear transformation of a Binomial variable.
+
+In conclusion, the combination of extensive $\mathbf{R}$ simulation and rigorous theoretical analysis (CLT and concentration inequalities) provided accurate and reliable solutions to all tasks, demonstrating a strong practical and conceptual understanding of probability theory.
