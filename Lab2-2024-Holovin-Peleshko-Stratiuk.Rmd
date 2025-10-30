@@ -761,7 +761,7 @@ This confirmed the linearity of expectation and the scaling property of variance
 
 This lab assignment successfully applied the Law of Large Numbers (LLN), the Central Limit Theorem (CLT), and theoretical bounds (Markov's and Chernoff's) to analyze three distinct probabilistic systems.
 
-Key Findings and Conclusions:Coding Theory (Task 1): We simulated the $[7,4]$ Hamming code, estimating the correct message transmission probability $\hat{p} \approx 0.965$ (for team ID 11). The simulation confirmed the LLN, with the estimate falling within the $\mathbf{95\%}$ confidence interval ($\approx [0.960, 0.970]$) derived from the CLT.
+Coding Theory (Task 1): We simulated the $[7,4]$ Hamming code, estimating the correct message transmission probability $\hat{p} \approx 0.965$ (for team ID 11). The simulation confirmed the LLN, with the estimate falling within the $\mathbf{95\%}$ confidence interval ($\approx [0.960, 0.970]$) derived from the CLT.
 
 Radioactive Decay (Task 2): We modeled ${}^{137}\text{Cs}$ decay using the Poisson distribution ($\mu \approx 3.52 \times 10^7$). The CLT was visually confirmed as the sample means converged to a Normal distribution. Theoretical bounds (CLT and Chernoff's) determined the maximum safe number of samples was $\mathbf{N=22}$ to keep the total decay count below $8 \times 10^8$ with 95% probability.
 
