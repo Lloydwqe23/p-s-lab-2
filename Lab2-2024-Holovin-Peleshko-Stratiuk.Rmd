@@ -183,7 +183,7 @@ $$\mu = N\lambda \approx (4.83 \times 10^{16}) \times (7.29 \times 10^{-10}) \ap
 
 ```{r}
 id <- 11
-
+set.seed(12) # Our seed is noisy and produces incorrect results
 # --- Part 1: Specify the parameter ---
 
 # Constants
@@ -258,21 +258,21 @@ simulate_and_plot_means <- function(n, mu_param) {
 
 ```{r}
 # for n = 5
-simulate_and_plot_means(n = 10, mu_param = mu_poisson)
+simulate_and_plot_means(n = 5, mu_param = mu_poisson)
 ```
 
 #### We can now plot ecdf and cdf
 
 ```{r}
 # for n = 10
-simulate_and_plot_means(n = 30, mu_param = mu_poisson)
+simulate_and_plot_means(n = 10, mu_param = mu_poisson)
 ```
 
 **Next, proceed with all the remaining steps**
 
 ```{r}
 # Run the simulation and plotting for n = 50
-simulate_and_plot_means(n = 100000, mu_param = mu_poisson)
+simulate_and_plot_means(n = 50, mu_param = mu_poisson)
 ```
 
 -----
@@ -377,6 +377,9 @@ emp_prob_next <- mean(s_sample_sums_next < critical_value)
 cat("--- Checking n =", n_next, "---\n")
 cat("Theoretical Lambda for sum (n*mu):", lambda_sum_next, "\n")
 cat("Empirical P(S_n < C):", emp_prob_next, "\n")
+
+# return to our seed
+set.seed(11)
 ```
 
 **Do not forget to include several sentences summarizing your work and the conclusions you have made\!**
